@@ -30,4 +30,26 @@ describe "Element" do
       browser.legend(:text, "Personal information").previous_sibling.should be_nil
     end
   end
+
+  describe "#not_exists?" do
+    it "should not propagate ObsoleteElementErrors" do
+      browser.goto WatirSpec.url_for('removed_element.html', :needs_server => true)
+
+      button = browser.button(:id => "remove-button")
+      element = browser.div(:id => "text")
+
+      expect(element.not_exist?).to be false
+      button.click
+      expect(element.not_exist?).to be true
+    end
+
+    it "does not match only part of the class name" do
+      browser.goto(WatirSpec.url_for("class_locator.html"))
+      expect(browser.div(:class => "c").not_exist?).to be true
+    end
+
+    it "doesn't raise when called on nested elements" do
+      expect(browser.div(:id, 'no_such_div').link(:id, 'no_such_id').not_exist?).to be true
+    end
+  end
 end

@@ -204,6 +204,32 @@ module Watir
     end
 
     #
+    # Handles timeouts.
+    #
+    # @return [Watir::Timeouts]
+    #
+
+    def timeouts
+      @timeouts ||= Timeouts.new driver.manage
+    end
+
+    #
+    # Toggles off implicit_timeout for yield
+    #
+    # @param Block
+    #
+
+    def without_implicit_wait &block
+      begin
+        current_implicit_wait = timeouts.implicit_wait
+        timeouts.implicit_wait = 0
+        yield(self)
+      ensure
+        timeouts.implicit_wait = current_implicit_wait
+      end
+    end
+
+    #
     # Waits until readyState of document is complete.
     #
     # @param [Fixnum] timeout
@@ -259,6 +285,28 @@ module Watir
       args.map! { |e| e.kind_of?(Watir::Element) ? e.wd : e }
       returned = @driver.execute_script(script, *args)
 
+      wrap_elements_in(returned)
+    end
+
+    # Execute an asynchronous piece of JavaScript in the context of the
+    # currently selected frame or window. Unlike executing
+    # execute_script (synchronous JavaScript), scripts
+    # executed with this method must explicitly signal they are finished by
+    # invoking the provided callback. This callback is always injected into the
+    # executed function as the last argument.
+    #
+    # @param [String] script JavaScript snippet to execute
+    # @param [WebDriver::Element,Integer, Float, Boolean, NilClass, String, Array] *args
+    #   Arguments to the script. May be empty.
+    #
+
+    def execute_async_script(script, *args)
+      args.map! { |e| e.kind_of?(Watir::Element) ? e.wd : e }
+      begin
+        returned = @driver.execute_async_script(script, *args)
+      rescue Selenium::WebDriver::Error::ScriptTimeOutError => ex
+        raise Watir::Wait::TimeoutError, ex.message
+      end
       wrap_elements_in(returned)
     end
 
