@@ -7,7 +7,7 @@ module Watir
 
     class TimeoutError < StandardError ; end
 
-    INTERVAL = 0.1
+    DEFAULT_INTERVAL = 0.1
 
 
     class << self
@@ -26,6 +26,20 @@ module Watir
       end
 
       #
+      # Sets the polling interval for waiting.
+      #
+      # @example
+      #   Watir::Wait.retry_every(1).until { browser.a(:id => "ajaxed").visible? }
+      #
+      # @param [Fixnum] interval how long to wait between attempts
+      #
+
+      def retry_every(interval=nil)
+        @interval = interval || DEFAULT_INTERVAL
+        self
+      end
+
+      #
       # Waits until the block evaluates to true or times out.
       #
       # @example
@@ -41,10 +55,14 @@ module Watir
 
         timer.wait(timeout) do
           result = yield(self)
-          return result if result
-          sleep INTERVAL
+          if result
+            @interval = DEFAULT_INTERVAL
+            return result
+          end
+          sleep(@interval || DEFAULT_INTERVAL)
         end
 
+        @interval = DEFAULT_INTERVAL
         raise TimeoutError, message_for(timeout, message)
       end
 
@@ -63,10 +81,15 @@ module Watir
         timeout ||= Watir.default_timeout
 
         timer.wait(timeout) do
-          return unless yield(self)
-          sleep INTERVAL
+          result = yield(self)
+          unless result
+            @interval = DEFAULT_INTERVAL
+            return
+          end
+          sleep(@interval || DEFAULT_INTERVAL)
         end
 
+        @interval = DEFAULT_INTERVAL
         raise TimeoutError, message_for(timeout, message)
       end
 
