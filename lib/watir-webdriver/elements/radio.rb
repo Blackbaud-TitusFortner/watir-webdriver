@@ -7,7 +7,7 @@ module Watir
     #
 
     def set
-      assert_exists
+      wait_for_present
       assert_enabled
 
       @element.click unless set?
@@ -20,7 +20,7 @@ module Watir
     #
 
     def set?
-      assert_exists
+      wait_for_exists
       @element.selected?
     end
 

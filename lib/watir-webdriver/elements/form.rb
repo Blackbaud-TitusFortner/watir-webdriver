@@ -9,7 +9,7 @@ module Watir
     #
 
     def submit
-      assert_exists
+      wait_for_present
       @element.submit
       run_checkers
     end

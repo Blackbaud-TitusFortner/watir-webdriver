@@ -43,7 +43,7 @@ module Watir
     def exists?
       assert_exists
       true
-    rescue UnknownObjectException, UnknownFrameException
+    rescue UnknownObjectException
       false
     end
     alias_method :exist?, :exists?
@@ -83,7 +83,7 @@ module Watir
     #
 
     def text
-      assert_exists
+      wait_for_exists
       @element.text.strip
     end
 
@@ -94,7 +94,7 @@ module Watir
     #
 
     def tag_name
-      assert_exists
+      wait_for_exists
       @element.tag_name.downcase
     end
 
@@ -116,22 +116,36 @@ module Watir
     #
 
     def click(*modifiers)
-      assert_exists
+      wait_for_present
       assert_enabled
+      retried = false
 
-      if modifiers.any?
-        assert_has_input_devices_for "click(#{modifiers.join ', '})"
+      begin
+        if modifiers.any?
+          assert_has_input_devices_for "click(#{modifiers.join ', '})"
 
-        action = driver.action
-        modifiers.each { |mod| action.key_down mod }
-        action.click @element
-        modifiers.each { |mod| action.key_up mod }
+          action = driver.action
+          modifiers.each { |mod| action.key_down mod }
+          action.click @element
+          modifiers.each { |mod| action.key_up mod }
 
-        action.perform
-      else
-        @element.click
+          action.perform
+        else
+          @element.click
+        end
+
+        # Workaround for Google issue: https://code.google.com/p/chromedriver/issues/detail?id=929
+        # Element not clickable should throw a Not Visible Exception, which wait_for_present will catch & retry
+        # This will force element to get looked up again and retried once
+      rescue Selenium::WebDriver::Error::UnknownError => e
+        if e.message.include?("Element is not clickable at point") && !retried
+          @element = nil
+          retried = true
+          retry
+        else
+          raise e
+        end
       end
-
       run_checkers
     end
 
@@ -144,7 +158,7 @@ module Watir
     #
 
     def double_click
-      assert_exists
+      wait_for_present
       assert_has_input_devices_for :double_click
 
       driver.action.double_click(@element).perform
@@ -160,7 +174,7 @@ module Watir
     #
 
     def right_click
-      assert_exists
+      wait_for_present
       assert_has_input_devices_for :right_click
 
       driver.action.context_click(@element).perform
@@ -176,7 +190,7 @@ module Watir
     #
 
     def hover
-      assert_exists
+      wait_for_exists
       assert_has_input_devices_for :hover
 
       driver.action.move_to(@element).perform
@@ -194,7 +208,7 @@ module Watir
 
     def drag_and_drop_on(other)
       assert_is_element other
-      assert_exists
+      wait_for_exists
       assert_has_input_devices_for :drag_and_drop_on
 
       driver.action.
@@ -214,7 +228,7 @@ module Watir
     #
 
     def drag_and_drop_by(right_by, down_by)
-      assert_exists
+      wait_for_exists
       assert_has_input_devices_for :drag_and_drop_by
 
       driver.action.
@@ -250,7 +264,7 @@ module Watir
     #
 
     def value
-      assert_exists
+      wait_for_exists
 
       begin
         @element.attribute('value') || ''
@@ -271,7 +285,7 @@ module Watir
     #
 
     def attribute_value(attribute_name)
-      assert_exists
+      wait_for_exists
       @element.attribute attribute_name
     end
 
@@ -286,7 +300,7 @@ module Watir
     #
 
     def outer_html
-      assert_exists
+      wait_for_exists
       execute_atom(:getOuterHtml, @element).strip
     end
 
@@ -303,7 +317,7 @@ module Watir
     #
 
     def inner_html
-      assert_exists
+      wait_for_exists
       execute_atom(:getInnerHtml, @element).strip
     end
 
@@ -317,7 +331,7 @@ module Watir
     #
 
     def send_keys(*args)
-      assert_exists
+      wait_for_present
       @element.send_keys(*args)
     end
 
@@ -329,7 +343,7 @@ module Watir
     #
 
     def focus
-      assert_exists
+      wait_for_present
       driver.execute_script "return arguments[0].focus()", @element
     end
 
@@ -340,7 +354,7 @@ module Watir
     #
 
     def focused?
-      assert_exists
+      wait_for_present
       @element == driver.switch_to.active_element
     end
 
@@ -357,7 +371,7 @@ module Watir
     #
 
     def fire_event(event_name)
-      assert_exists
+      wait_for_exists
       event_name = event_name.to_s.sub(/^on/, '').downcase
 
       execute_atom :fireEvent, @element, event_name
@@ -392,7 +406,7 @@ module Watir
     #
 
     def wd
-      assert_exists
+      wait_for_exists
       @element
     end
 
@@ -403,8 +417,10 @@ module Watir
     #
 
     def visible?
-      assert_exists
-      @element.displayed?
+      assert_visible
+      true
+    rescue ObjectNotVisibleException, Selenium::WebDriver::Error::StaleElementReferenceError
+      false
     end
 
     #
@@ -437,7 +453,7 @@ module Watir
 
     def style(property = nil)
       if property
-        assert_exists
+        wait_for_exists
         @element.style property
       else
         attribute_value("style").to_s.strip
@@ -498,6 +514,25 @@ module Watir
 
   protected
 
+    def wait_for_exists
+      begin
+        Watir::Wait.until { exists? || (@element = nil; false) }
+      rescue Watir::Wait::TimeoutError
+        warn "This test has slept for the duration of the default timeout. If your test is passing, consider using #exists? instead of rescuing this error"
+        raise Watir::Exception::UnknownObjectException, "unable to locate element, using #{selector_string} after waiting #{Watir.default_timeout} seconds"
+      end
+    end
+
+    def wait_for_present
+      wait_for_exists
+      begin
+        Watir::Wait.until { visible? || (@element = nil; false) }
+      rescue Watir::Wait::TimeoutError
+        warn "This test has slept for the duration of the default timeout. If your test is passing, consider using #visible? instead of rescuing this error"
+        raise Watir::Exception::ObjectNotVisibleException, "element exists but not displayed, using #{selector_string} after waiting #{Watir.default_timeout} seconds"
+      end
+    end
+
     def assert_exists
       if @element and not Watir.always_locate?
         assert_not_stale
@@ -514,6 +549,15 @@ module Watir
         unless @element
           raise UnknownObjectException, "unable to locate element, using #{selector_string}"
         end
+      end
+    end
+
+    # throws UnknownObjectException if called on an element that does not exist
+    def assert_visible
+      assert_exists
+
+      unless @element.displayed?
+        raise ObjectNotVisibleException, "unable to locate element, using #{selector_string}"
       end
     end
 
@@ -546,7 +590,7 @@ module Watir
     end
 
     def attribute?(attribute)
-      assert_exists
+      wait_for_exists
       !!execute_atom(:getAttribute, @element, attribute.to_s.downcase)
     end
 
@@ -584,7 +628,7 @@ module Watir
     end
 
     def locate_dom_element(method)
-      assert_exists
+      wait_for_exists
 
       e = execute_atom method, @element
 

@@ -18,7 +18,7 @@ module Watir
     #
 
     def clear
-      assert_exists
+      wait_for_present
 
       raise Error, "you can only clear multi-selects" unless multiple?
 
@@ -34,7 +34,7 @@ module Watir
     #
 
     def options
-      assert_exists
+      wait_for_exists
       super
     end
 
@@ -46,7 +46,6 @@ module Watir
     #
 
     def include?(str_or_rx)
-      assert_exists
       # TODO: optimize similar to selected?
       options.any? { |e| str_or_rx === e.text }
     end
@@ -87,7 +86,7 @@ module Watir
     #
 
     def selected?(str_or_rx)
-      assert_exists
+      wait_for_exists
       matches = @element.find_elements(:tag_name, 'option').select { |e| str_or_rx === e.text || str_or_rx === e.attribute(:label) }
 
       if matches.empty?
@@ -117,14 +116,13 @@ module Watir
     #
 
     def selected_options
-      assert_exists
       options.select { |e| e.selected? }
     end
 
     private
 
     def select_by(how, str_or_rx)
-      assert_exists
+      wait_for_present
 
       case str_or_rx
       when String, Numeric

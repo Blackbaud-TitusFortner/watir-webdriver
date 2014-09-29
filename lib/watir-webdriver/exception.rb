@@ -16,6 +16,7 @@ module Watir
     class NavigationException < Error; end
     class UnknownFrameException < Error; end
     class UnknownRowException < Error; end
+    class ObjectNotVisibleException < Error; end
 
   end # Exception
 end # Watir

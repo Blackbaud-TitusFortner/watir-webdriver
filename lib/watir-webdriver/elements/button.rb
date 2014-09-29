@@ -23,7 +23,7 @@ module Watir
     #
 
     def text
-      assert_exists
+      wait_for_exists
 
       tn = @element.tag_name.downcase
 

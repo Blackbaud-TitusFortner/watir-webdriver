@@ -17,7 +17,7 @@ module Watir
     #
 
     def set(bool = true)
-      assert_exists
+      wait_for_present
       assert_enabled
 
       if @element.selected?
@@ -33,7 +33,7 @@ module Watir
     #
 
     def set?
-      assert_exists
+      wait_for_exists
       @element.selected?
     end
 

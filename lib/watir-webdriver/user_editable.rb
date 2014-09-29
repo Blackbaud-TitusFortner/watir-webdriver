@@ -8,7 +8,7 @@ module Watir
     #
 
     def set(*args)
-      assert_exists
+      wait_for_present
       assert_writable
 
       @element.clear
@@ -23,7 +23,7 @@ module Watir
     #
 
     def append(*args)
-      assert_exists
+      wait_for_present
       assert_writable
 
       @element.send_keys(*args)
@@ -35,7 +35,7 @@ module Watir
     #
 
     def clear
-      assert_exists
+      wait_for_present
       @element.clear
     end
 

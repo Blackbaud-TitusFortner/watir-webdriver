@@ -30,7 +30,7 @@ module Watir
     #
 
     def strings
-      assert_exists
+      wait_for_exists
 
       rows.inject [] do |res, row|
         res << row.cells.map { |cell| cell.text }

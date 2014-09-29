@@ -15,7 +15,7 @@ module Watir
     #
 
     def select
-      assert_exists
+      wait_for_present
       @element.click
     end
 
@@ -27,7 +27,7 @@ module Watir
     #
 
     def toggle
-      assert_exists
+      wait_for_present
       @element.click
     end
 
@@ -49,7 +49,7 @@ module Watir
     #
 
     def selected?
-      assert_exists
+      wait_for_exists
       @element.selected?
     end
 
@@ -65,7 +65,7 @@ module Watir
     #
 
     def text
-      assert_exists
+      wait_for_exists
 
       # A little unintuitive - we'll return the 'label' or 'text' attribute if
       # they exist, otherwise the inner text of the element

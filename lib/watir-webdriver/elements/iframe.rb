@@ -3,7 +3,7 @@ module Watir
   class IFrame < HTMLElement
 
     def locate
-      @parent.assert_exists
+      @parent.wait_for_exists
 
       locator = locator_class.new(@parent.wd, @selector.merge(:tag_name => tag_name), self.class.attribute_list)
       element = locator.locate
@@ -13,6 +13,20 @@ module Watir
 
       FramedDriver.new(element, driver)
     end
+
+    #
+    # Returns true if iframe exists.
+    #
+    # @return [Boolean]
+    #
+
+    def exists?
+      assert_exists
+      true
+    rescue UnknownFrameException
+      false
+    end
+    alias_method :exist?, :exists?
 
     def assert_exists
       if @selector.has_key? :element
@@ -31,8 +45,17 @@ module Watir
       super
     end
 
+    def wait_for_exists
+      begin
+        Watir::Wait.until { exists? || (@element = nil; false) }
+      rescue Watir::Wait::TimeoutError
+        warn "This test has slept for the duration of the default timeout. If your test is passing, consider using #exists? instead of rescuing this error"
+        raise Watir::Exception::UnknownFrameException, "unable to locate frame, using #{selector_string} after waiting #{Watir.default_timeout} seconds"
+      end
+    end
+
     def html
-      assert_exists
+      wait_for_exists
 
       # this will actually give us the innerHTML instead of the outerHTML of the <frame>,
       # but given the choice this seems more useful

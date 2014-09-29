@@ -21,7 +21,7 @@ module Watir
     #
 
     def value=(path)
-      assert_exists
+      wait_for_present
       path = path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File::ALT_SEPARATOR
       @element.send_keys path
     end

@@ -20,7 +20,7 @@ module Watir
     #
 
     def text
-      assert_exists
+      wait_for_exists
       @alert.text.strip
     end
 
@@ -34,7 +34,7 @@ module Watir
     #
 
     def ok
-      assert_exists
+      wait_for_exists
       @alert.accept
     end
 
@@ -48,7 +48,7 @@ module Watir
     #
 
     def close
-      assert_exists
+      wait_for_exists
       @alert.dismiss
     end
 
@@ -63,7 +63,7 @@ module Watir
     #
 
     def set(value)
-      assert_exists
+      wait_for_exists
       @alert.send_keys(value)
     end
 
@@ -93,6 +93,14 @@ module Watir
       @alert = @target_locator.alert
     rescue Selenium::WebDriver::Error::NoAlertPresentError
       raise Exception::UnknownObjectException, 'unable to locate alert'
+    end
+
+    def wait_for_exists
+      begin
+        Watir::Wait.until { exists? }
+      rescue Watir::Wait::TimeoutError
+        raise Exception::UnknownObjectException, 'unable to locate alert'
+      end
     end
 
   end # Alert

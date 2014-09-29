@@ -145,6 +145,7 @@ module Watir
     #
 
     def when_present(timeout = nil)
+      warn "#when_present is likely unnecessary; elements now automatically wait when getting acted upon"
       timeout ||= Watir.default_timeout
       message = "waiting for #{selector_string} to become present"
 
