@@ -11,21 +11,12 @@ module Watir
 
       @parent.reset!
 
-      FramedDriver.new(element, driver)
+      @wd = FramedDriver.new(element, driver)
     end
 
     def assert_exists
       if @selector.has_key? :element
         raise UnknownFrameException, "wrapping a WebDriver element as a Frame is not currently supported"
-      end
-
-      if @element && !Watir.always_locate?
-        begin
-          @element.tag_name # rpc
-          return @element
-        rescue Selenium::WebDriver::Error::ObsoleteElementError
-          @element = nil # re-locate
-        end
       end
 
       super
@@ -41,6 +32,11 @@ module Watir
 
     def execute_script(*args)
       browser.execute_script(*args)
+    end
+
+    def assert_not_stale
+      super
+      driver.switch_to.frame @wd.send(:wd)
     end
 
     private
@@ -110,7 +106,8 @@ module Watir
     end
 
     def ==(other)
-      @element == other.wd
+      return false unless other.kind_of? self.class
+      wd == other.wd
     end
     alias_method :eql?, :==
 
