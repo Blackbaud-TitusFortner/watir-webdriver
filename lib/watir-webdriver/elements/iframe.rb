@@ -19,15 +19,7 @@ module Watir
         raise UnknownFrameException, "wrapping a WebDriver element as a Frame is not currently supported"
       end
 
-      if @element && !Watir.always_locate?
-        begin
-          @element.tag_name # rpc
-          return @element
-        rescue Selenium::WebDriver::Error::ObsoleteElementError
-          @element = nil # re-locate
-        end
-      end
-
+      reset! if stale?
       super
     end
 
@@ -36,7 +28,7 @@ module Watir
 
       # this will actually give us the innerHTML instead of the outerHTML of the <frame>,
       # but given the choice this seems more useful
-      execute_atom(:getOuterHtml, @element.find_element(:tag_name => "html")).strip
+      element_call { execute_atom(:getOuterHtml, @element.find_element(:tag_name => "html")).strip }
     end
 
     def execute_script(*args)

@@ -21,10 +21,15 @@ describe Watir::Element do
   end
 
   describe "#reset!" do
-    it "successfully relocates collection elements after a reset!" do
-      element = browser.divs(:id, 'foo').to_a.first
-      expect(element).to_not be_nil
+    before do
+      browser.goto(WatirSpec.url_for("wait.html", :needs_server => true))
+    end
 
+    it "successfully relocates collection elements after a reset!" do
+      element = browser.div(:id, 'foo')
+      expect(element).to exist
+      browser.refresh
+      expect(element.exist?).to be false unless Watir.always_locate?
       element.send :reset!
       expect(element).to exist
     end
