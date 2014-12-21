@@ -98,7 +98,7 @@ module Watir
 
     def text
       assert_exists
-      element_call { @element.text }
+      element_call { @element.text }.strip
     end
 
     #
@@ -301,7 +301,7 @@ module Watir
 
     def outer_html
       assert_exists
-      element_call { execute_atom(:getOuterHtml, @element) }
+      element_call { execute_atom(:getOuterHtml, @element) }.strip
     end
 
     alias_method :html, :outer_html
@@ -318,7 +318,7 @@ module Watir
 
     def inner_html
       assert_exists
-      element_call { execute_atom(:getInnerHtml, @element) }
+      element_call { execute_atom(:getInnerHtml, @element) }.strip
     end
 
     #
