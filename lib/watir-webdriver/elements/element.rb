@@ -386,7 +386,9 @@ module Watir
       locate_dom_element(:getParentElement)
     end
 
-      e = execute_atom :getParentElement, @element
+    def next_sibling
+      locate_dom_element(:getNextSibling)
+    end
 
     def previous_sibling
       locate_dom_element(:getPreviousSibling)
