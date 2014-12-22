@@ -19,8 +19,7 @@ module Watir
         raise UnknownFrameException, "wrapping a WebDriver element as a Frame is not currently supported"
       end
 
-      reset! if stale?
-      super
+      element_call { super}
     end
 
     def html
