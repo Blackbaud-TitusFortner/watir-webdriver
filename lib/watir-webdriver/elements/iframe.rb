@@ -14,11 +14,6 @@ module Watir
       @wd = FramedDriver.new(element, driver)
     end
 
-    def assert_exists
-      reset!
-      super
-    end
-
     def html
       assert_exists
 
