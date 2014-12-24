@@ -67,8 +67,7 @@ module Watir
     def ==(other)
       return false unless other.kind_of? self.class
 
-      assert_exists
-      @element == other.wd
+      wd == other.wd
     end
     alias_method :eql?, :==
 
@@ -495,14 +494,9 @@ module Watir
   protected
 
     def assert_exists
-      if @element and not Watir.always_locate?
-        assert_not_stale
-        return
-      end
+      reset! if Watir.always_locate?
 
-      @element = @selector[:element]
-
-      if @element
+      if @element = @selector[:element]
         assert_not_stale
       else
         @element = locate
@@ -514,7 +508,11 @@ module Watir
     end
 
     def assert_not_stale
-      @element.enabled? # do a staleness check - any wire call will do.
+      @parent.assert_not_stale
+      # Element is not stale if it hasn't been previously located or defined
+      if @element ||= @selector[:element]
+        @element.enabled? # do a staleness check - any wire call will do.
+      end
     rescue Selenium::WebDriver::Error::ObsoleteElementError => ex
       # don't cache a stale element - it will never come back
       @element = nil
