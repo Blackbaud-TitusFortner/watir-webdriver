@@ -11,7 +11,7 @@ module Watir
 
       @parent.reset!
 
-      @wd = FramedDriver.new(element, driver)
+      FramedDriver.new(element, driver)
     end
 
     def html
@@ -26,10 +26,14 @@ module Watir
       browser.execute_script(*args)
     end
 
-    def assert_not_stale
-      super
-      @wd.send :switch!
+    # Frame created from collection stores a WebDriverElement, not a FramedDriver
+    def ==(other)
+      self_wd = wd.is_a?(FramedDriver) ? wd.send(:wd) : wd
+      other_wd = other.wd.is_a?(FramedDriver) ? other.wd.send(:wd) : other.wd
+      self_wd == other_wd
     end
+    alias_method :eql?, :==
+
 
     private
 
@@ -41,10 +45,6 @@ module Watir
 
 
   class IFrameCollection < ElementCollection
-
-    def to_a
-      (0...elements.size).map { |idx| element_class.new @parent, :index => idx }
-    end
 
     def element_class
       IFrame
