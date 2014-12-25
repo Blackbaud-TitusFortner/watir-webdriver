@@ -21,6 +21,8 @@ if ENV['PREFER_CSS']
   Watir.prefer_css = true
 end
 
+require 'configurations'
+
 WEBDRIVER_SELECTORS = [:class, :class_name, :css, :id, :tag_name, :xpath]
 
 if ENV['TRAVIS']
