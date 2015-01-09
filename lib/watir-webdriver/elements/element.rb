@@ -119,7 +119,8 @@ module Watir
       assert_exists
       assert_enabled
 
-      if modifiers.any?
+      begin
+        if modifiers.any?
         assert_has_input_devices_for "click(#{modifiers.join ', '})"
 
         action = driver.action
@@ -128,10 +129,15 @@ module Watir
         modifiers.each { |mod| action.key_up mod }
 
         action.perform
-      else
-        @element.click
+        else
+          @element.click
+        end
+          # Workaround for Google issue: https://code.google.com/p/chromedriver/issues/detail?id=92
+      rescue Selenium::WebDriver::Error::UnknownError => ex
+        raise unless ex.message.include?("Element is not clickable at point")
+        assert_exists!
+        retry
       end
-
       run_checkers
     end
 

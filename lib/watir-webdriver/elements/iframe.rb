@@ -138,7 +138,8 @@ module Watir
 
     def switch!
       @driver.switch_to.frame @element
-    rescue Selenium::WebDriver::Error::NoSuchFrameError => e
+        # UnknownError is a workaround for Chrome: https://code.google.com/p/chromedriver/issues/detail?id=963
+    rescue Selenium::WebDriver::Error::NoSuchFrameError, Selenium::WebDriver::Error::UnknownError => e
       raise Exception::UnknownFrameException, e.message
     end
 
