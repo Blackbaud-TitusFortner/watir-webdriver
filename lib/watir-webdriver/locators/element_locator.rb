@@ -40,7 +40,7 @@ module Watir
       # (e.g. text_field locates both input and textarea)
       validate_element(element) if element
       # UnknownFrameException is workaround for- https://code.google.com/p/chromedriver/issues/detail?id=948
-    rescue Selenium::WebDriver::Error::NoSuchElementError, Selenium::WebDriver::Error::ObsoleteElementError, Watir::Exception::UnknownFrameException
+    rescue Selenium::WebDriver::Error::NoSuchElementError, Selenium::WebDriver::Error::StaleElementReferenceError, Watir::Exception::UnknownFrameException
       nil
     end
 
